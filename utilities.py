@@ -21,6 +21,10 @@ from shutil import copyfile
 MAIN_SETS_FOLDER = '/Users/wilsonforero/Documents/Universidad/Proyecto/python/sets'
 #MAIN_SETS_FOLDER = 'sets'
 
+PACKAGE_1 = 'Set1-500ms'
+PACKAGE_2 = 'Set2-100ms'
+PACKAGE_3 = 'Set3-0ms'
+
 # Nombre de la carpeta qur contiene los sets clasificados, es decir el
 # último paso de Matlab
 CLASSIFIED_SETS_FOLDER = op.join(MAIN_SETS_FOLDER, 'Clasificado')
@@ -29,7 +33,7 @@ PROCESSED_WITH_PYTHON_FOLDER = op.join(MAIN_SETS_FOLDER, 'procesado_python')
 
 PROCESSED_AND_CLASSIFIED_FOLDER = op.join(MAIN_SETS_FOLDER, 'procesado_clasificado_python')
 
-SETS_PACKAGES = ['Set1-500ms', 'Set2-100ms', 'Set3-0ms']
+SETS_PACKAGES = [PACKAGE_1, PACKAGE_2, PACKAGE_3]
 SUB_CATEGORIES = ['AlE', 'IrE', 'NE', 'IrR', 'NR', 'AlR']
 
 LABELS = {'AlR': 0, 'NR': 1, 'IrR': 2, 'AlE': 3, 'NE': 4, 'IrE': 5}
@@ -190,7 +194,7 @@ def normalize_array(original_data, mode='channels'):
     """
     Parámetros:
     _____
-        - original_data: Arreglo 3D de los datos originales del archivo. Para cargar los archivos usar la función `~utilities.get_files_with_mne`
+        - original_data: Arreglo 3D (epochs, canales, muestras) de los datos originales del archivo. Para cargar los archivos usar la función `~utilities.get_files_with_mne`
         - mode: Modo de normalización si desea normalizar los canales usar `channels`, para el caso de epochs cualquier otro valor
     
     Retorna:
@@ -200,25 +204,35 @@ def normalize_array(original_data, mode='channels'):
     """
     
     if mode == 'channels':
-        prom_per_channel = np.median(original_data, axis=0)
-        print(prom_per_channel.shape, 'TEST' )
-        standard_deviation_channels_np = np.std(original_data, axis = 0)
-        normalized_channels = np.copy(original_data)
-        assert(prom_per_channel.shape[0] == standard_deviation_channels_np.shape[0])
-        for channel in range(original_data.shape[1]):
+#        prom_per_channel = np.median(original_data, axis=0)
+#        print(prom_per_channel.shape, 'TEST' )
+#        standard_deviation_channels_np = np.std(original_data, axis = 0)
+#        normalized_channels = np.copy(original_data)
+        normalized = np.copy(original_data)
+#        assert(prom_per_channel.shape[0] == standard_deviation_channels_np.shape[0])
+        # El -1 es porque en ese canal solo se encuentran 0, por tanto esos valores se dejan así
+        for channel in range(original_data.shape[1] - 1):
             for epoch in range(original_data.shape[0]):
+                # Se extraen las 256 muestras de ese epoch
+                epoch_data = original_data[epoch, channel, :]
+                # Promedio de las muestras de ese epoch
+                prom_epoch = np.median(epoch_data)
+                # Desviacion de las muestras de ese epoch
+                standard_deviation_epoch = np.std(epoch_data)
                 for sample in range(original_data.shape[2]):
                     # Se toma el valor original
-                    original_value = original_data[epoch, channel, sample]
+                    original_value = epoch_data[sample]
                     # Se toma el valor del promedio para ese canal en esa muestra
-                    prom_value = prom_per_channel[channel, sample]
+#                    prom_value = prom_per_channel[channel, sample]
                     # Se toma la desviación para ese canal en esa muestra
-                    std_deviation = standard_deviation_channels_np[channel, sample]
+#                    std_deviation = standard_deviation_channels_np[channel, sample]
                     # Se opera acorde a la fórmula
-                    normalized_data = (original_value - prom_value) / std_deviation
+#                    normalized_data = (original_value - prom_value) / std_deviation
+                    # Se opera valor a valor
+                    normalized_data = (original_value - prom_epoch) / standard_deviation_epoch
                     # Se almacena el valor normalizado
-                    normalized_channels[epoch, channel, sample] = normalized_data
-        return normalized_channels
+                    normalized[epoch, channel, sample] = normalized_data
+        return normalized
     else:
         prom_per_epoch = np.median(original_data, axis=1)
         standard_deviation_epochs_np = np.std(original_data, axis = 1)
