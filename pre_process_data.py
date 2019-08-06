@@ -13,7 +13,8 @@ import os
 # =============================================================================
 # En esta sección se realiza la normalización de datos
 # =============================================================================
-sets_package='Set3-0ms'
+#sets_package='Set3-0ms'
+sets_package = utilities.SETS_PACKAGES[1]
 
 
 for sub_cat in utilities.SUB_CATEGORIES:
