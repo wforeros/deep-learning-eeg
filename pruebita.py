@@ -10,15 +10,10 @@ import random
 import numpy as np
 #%%
 
-set_package = 'Set3-0ms'
-#sub_cat = 'AlE'
-#cat = utilities.get_category_from_subcategory(sub_cat)
-#set_type = 'Train'
-#path = op.join(utilities.PROCESSED_AND_CLASSIFIED_FOLDER, sets_package, cat, sub_cat, set_type)
-#
-#files = utilities.get_files_with_mne(directory=path, extension='.fif')
-#file = files[0]
-#data = file.get_data()
+# =============================================================================
+# Carga de los datos guardados en el set_package especificado
+# =============================================================================
+set_package = utilities.SETS_PACKAGES[0]
 
 # En este array irán diccionarios cuya llave es el label y su key es la data
 train_array = []
@@ -91,7 +86,6 @@ files = None
 label = None
 path = None
 sub_category = None
-set_package = None
 
 random.shuffle(test_array)
 random.shuffle(train_array)
@@ -114,25 +108,40 @@ n_samples = sample_set.shape[1]
 # canales
 #%%
 
+# =============================================================================
+# Creacion de sets de entrenamiento y validación
+# =============================================================================
+
+
 # Creación de los arreglos numpy que serán entrada a la red para prueba
-X_test = np.zeros((n_files_test, n_samples, n_channels))
+X_test = np.zeros((n_files_test, n_channels, n_samples))
 Y_test = np.zeros((n_files_test, 6))
 
 
-for test_counter in range(len(test_array)):
-    dictionary = test_array[test_counter]
+#for test_counter in range(len(test_array)):
+#    dictionary = test_array[test_counter]
+#    # key es el label y value la data
+#    for key, value in dictionary.items():
+#        one_hot = utilities.label_to_onehot(key)
+#        Y_test[test_counter,:] = one_hot
+#        # Se hace el transpose porque originalmente viene como (canales, muestras)
+#        # pero la red espera que sea (muestras, canales) y transpose hace eso
+#        X_test[test_counter, :, :] = value
+
+
+for test_counter, dictionary in enumerate(test_array):
     # key es el label y value la data
     for key, value in dictionary.items():
         one_hot = utilities.label_to_onehot(key)
         Y_test[test_counter,:] = one_hot
         # Se hace el transpose porque originalmente viene como (canales, muestras)
         # pero la red espera que sea (muestras, canales) y transpose hace eso
-        X_test[test_counter, :, :] = np.transpose(value)
-
+        X_test[test_counter, :, :] = value
+        
 test_array = None
 
-    # Creación de los arreglos numpy que serán entrada a la red para entrenamiento
-X_train = np.zeros((n_files_train, n_samples, n_channels))
+# Creación de los arreglos numpy que serán entrada a la red para entrenamiento
+X_train = np.zeros((n_files_train, n_channels, n_samples))
 Y_train = np.zeros((n_files_train, 6))
 for counter, dictionary in enumerate(train_array):
     # key es el label y value la data
@@ -141,7 +150,7 @@ for counter, dictionary in enumerate(train_array):
         Y_train[counter,:] = one_hot
         # Se hace el transpose porque originalmente viene como (canales, muestras)
         # pero la red espera que sea (muestras, canales) y transpose hace eso
-        X_train[counter, :, :] = np.transpose(value)
+        X_train[counter, :, :] = value
     
 train_array = None
 dictionary = None
@@ -155,62 +164,25 @@ v = None
 #random.shuffle(dictionary)
 #for key in keys_values:
 #    print (key)
-#%%
-
-from keras.layers import Conv1D, BatchNormalization, MaxPooling1D, Activation, Flatten, Dense
-from keras.models import Sequential
-from keras.optimizers import SGD
-## Construcción del modelo 
-
-model = Sequential()
-
-# entrada = (#samples, #channels) (esto acorde a la documentación) 
-# considerando que los epochs son la entrada
-# es decir cada uno tendrá esas dimensiones
-input_shape = (n_samples, n_channels)
-# Capa #1
-model.add(Conv1D(filters=25, kernel_size=10, activation='linear', strides=1,  input_shape=input_shape))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
-model.add(MaxPooling1D(pool_size=3))
-
-# Capa #2
-model.add(Conv1D(filters=50, kernel_size=10, activation='linear',strides=1))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
-model.add(MaxPooling1D(pool_size=3))
-
-# Capa #3
-model.add(Conv1D(filters=100, kernel_size=10, activation='linear',strides=1))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
-model.add(MaxPooling1D(pool_size=3))
-
-#Capa #4
-model.add(Flatten())
-model.add(Dense(6, activation='softmax'))
-
-optimizer = SGD(lr=0.025)
-model.compile(optimizer, loss = 'categorical_crossentropy',metrics=['accuracy'])
-
-#for i in range(len(X_train)):
-#    setsito = X_train[i]
-model.fit(x=X_train, y=Y_train, batch_size=200, epochs=50, verbose=1)
 
 
 #%%
 
-test = X_train[0]
-test1 = np.copy(test)
-test1 = np.transpose(test1)
+# =============================================================================
+# Reshape de los sets de entrenamiento y prueba para el modelo corregido
+# =============================================================================
 
+files_shape, channels_shape, samples_shape  = X_train.shape
+X_train = X_train.reshape(files_shape, channels_shape, samples_shape, 1)
 
-
-
+files_shape, channels_shape, samples_shape  = X_test.shape
+X_test = X_test.reshape(files_shape, channels_shape, samples_shape, 1)
 
 #%%
-# Segunda prueba
 
+# =============================================================================
+# Modelo corregido
+# =============================================================================
 
 from keras.layers import Conv1D, Conv2D, BatchNormalization, MaxPooling1D, MaxPooling2D, Activation, Flatten, Dense, Reshape
 from keras.models import Sequential
@@ -232,7 +204,7 @@ model = Sequential()
 
 input_shape = (n_channels,n_samples,1)
 model.add(Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
-model.add(Conv2D(filters=25, kernel_size=(44,1), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
+model.add(Conv2D(filters=25, kernel_size=(n_channels,1), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
 model.add(Activation('elu'))
 model.add(MaxPooling2D(pool_size=(1,3)))
 
@@ -266,9 +238,9 @@ model.add(MaxPooling1D(pool_size=3))
 # Output size: 1x6x200
 # Maxpooling: 100 filtros cada uno de 1x3 (ojo, es MaxPooling1D)
 # output size: 1x2x200
-model.add(Conv1D(filters=200, kernel_size=(10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
+model.add(Conv1D(filters=200, kernel_size=(5), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
 model.add(Activation('elu'))
-model.add(MaxPooling1D(pool_size=3))
+#model.add(MaxPooling1D(pool_size=3))
 
 # CLASSIFICATION LAYER
 model.add(Flatten())
@@ -282,12 +254,99 @@ model.compile(optimizer, loss = 'categorical_crossentropy',metrics=['accuracy'])
 model.fit(x=X_train, y=Y_train, batch_size=200, epochs=50, verbose=1)
 
 
+#%%
+
+# =============================================================================
+# Evaluar modelo
+# =============================================================================
+model.evaluate(x=X_test, y=Y_test, batch_size=200, verbose=1)
+
+#%%
+
+# =============================================================================
+# Guardar modelo
+# =============================================================================
+# serialize model to JSON
+
+name_to_save = 'model_{package}'.format(package=set_package)
+model_json = model.to_json()
+json_name = '{name}.json'.format(name=name_to_save)
+with open(json_name, "w") as json_file:
+    json_file.write(model_json)
+    
+# Serializar en h5
+    
+h5_name = '{name}.h5'.format(name=name_to_save)
+model.save_weights(h5_name)
+print("Modelo guardado con el nombre:", name_to_save)
+
+
+#%%
+
+# =============================================================================
+# Carga de un modelo guardado
+# =============================================================================
+
+model_name = 'model_{package}'.format(package=set_package)
+
+from keras.models import model_from_json
+json_name = '{name}.json'.format(name=model_name)
+json_file = open(json_name, 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+h5_name = "{name}.h5".format(name=model_name)
+loaded_model.load_weights(h5_name)
+print('Modelo con nombre {name} cargado'.format(name=model_name))
+
+loaded_model.compile(optimizer, loss = 'categorical_crossentropy',metrics=['accuracy'])
+loaded_model.evaluate(x=X_train, y=Y_train, batch_size=200, verbose=1)
 
 
 
 
+#%%
 
-
-
-
-
+# =============================================================================
+# Este es el que no sirvió
+# =============================================================================
+#from keras.layers import Conv1D, BatchNormalization, MaxPooling1D, Activation, Flatten, Dense
+#from keras.models import Sequential
+#from keras.optimizers import SGD
+### Construcción del modelo 
+#
+#model = Sequential()
+#
+## entrada = (#samples, #channels) (esto acorde a la documentación) 
+## considerando que los epochs son la entrada
+## es decir cada uno tendrá esas dimensiones
+#input_shape = (n_samples, n_channels)
+## Capa #1
+#model.add(Conv1D(filters=25, kernel_size=10, activation='linear', strides=1,  input_shape=input_shape))
+#model.add(BatchNormalization())
+#model.add(Activation('relu'))
+#model.add(MaxPooling1D(pool_size=3))
+#
+## Capa #2
+#model.add(Conv1D(filters=50, kernel_size=10, activation='linear',strides=1))
+#model.add(BatchNormalization())
+#model.add(Activation('relu'))
+#model.add(MaxPooling1D(pool_size=3))
+#
+## Capa #3
+#model.add(Conv1D(filters=100, kernel_size=10, activation='linear',strides=1))
+#model.add(BatchNormalization())
+#model.add(Activation('relu'))
+#model.add(MaxPooling1D(pool_size=3))
+#
+##Capa #4
+#model.add(Flatten())
+#model.add(Dense(6, activation='softmax'))
+#
+#optimizer = SGD(lr=0.025)
+#model.compile(optimizer, loss = 'categorical_crossentropy',metrics=['accuracy'])
+#
+##for i in range(len(X_train)):
+##    setsito = X_train[i]
+#model.fit(x=X_train, y=Y_train, batch_size=200, epochs=50, verbose=1)
