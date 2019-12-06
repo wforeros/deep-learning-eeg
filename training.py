@@ -3,6 +3,8 @@
 """
 @author: wilsonforero
 """
+
+# 
 #%%
 import sys
 sys.path.insert(1, '/Users/wilsonforero/Documents/Universidad/Proyecto/python')
