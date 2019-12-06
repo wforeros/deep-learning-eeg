@@ -55,4 +55,4 @@ for sub_cat in deep_eeg_core.SUB_CATEGORIES:
                 deep_eeg_core.PROCESSED_AND_CLASSIFIED_FOLDER, sets_package, category, sub_cat
             )
     deep_eeg_core.create_directory(output_folder)
-    deep_eeg_core.split_sets(origin_folder, output_folder)
+    deep_eeg_core.split_sets(origin_folder, output_folder, test_size=test_size)
