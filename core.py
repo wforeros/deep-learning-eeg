@@ -51,8 +51,8 @@ LABELS = {'AlR': 0, 'NR': 1, 'IrR': 2, 'AlE': 3, 'NE': 4, 'IrE': 5}
 # Sección de funciones
 # =============================================================================
 
-def label_to_onehot(label):
-    assert (label < 6)
+def label_to_onehot(label, label_amount=6):
+    assert (label < label_amount)
     one_hot = np.zeros(6)
     one_hot[label] = 1
     return one_hot
