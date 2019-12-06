@@ -24,6 +24,7 @@ Esto teniendo una señal EEG (resultado de usar como estímulo uno de estos tipo
 - **pre_process_data.py**: En este script se realizan las siguientes tareas: Elimar canales FP1 y FP2 (usados para EOG), normalización de los datos, almacenamiento en archivos terminados en*"-epo.fif"* y división en carpetas de **entrenamiento** y **test**, con porcentaje por defecto de 80% y 20% respectivamente
 
 > La ecuación empleada para normalizar fue:
+
 $$\frac{canal  -  \mu}{\sigma}$$
 
 - **training.py**: Lectura de datos .fif, asignación de categoría para cada epoch, separación en arreglos de numpy X contiene epochs y Y contiene labels one hot, creación del modelo con la ayuda del script models.py, entrenamiento del modelo y almacenamiento del mismo
