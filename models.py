@@ -21,6 +21,7 @@ def create_classifier_model(n_channels, n_samples, n_classes = 2, compile_model 
     Retorna:
     ____
     - model: Modelo con las capas definidas y compilado si así se marcó
+    - str: Tipo de modelo generado, en este caso retorna 'classifier'
     """
     model = Sequential()
     
@@ -107,165 +108,30 @@ def create_classifier_model(n_channels, n_samples, n_classes = 2, compile_model 
     if compile_model:
         optimizer = SGD(lr=0.05)
         model.compile(optimizer, loss = 'categorical_crossentropy',metrics=['accuracy'])
-    return model
+    return model, 'classifier'
 
-
-    
-def create_autoencoder_mod(n_channels = 30, n_samples = 256):
-    from keras.layers import Input, InputLayer,  Dense, Conv2D, MaxPooling2D, UpSampling2D, Conv2DTranspose
-    from keras.models import Model
-    from keras import backend as K
-    model = Sequential()
-    input_shape = (n_channels,n_samples,1)
-    #model.add(Dropout(0.5))
-    #model.add(Conv2D(filters=25, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last'))
-    
-    input_ = Input(input_shape)
-    
-    # Capa 1
-    x = Conv2D(filters=50, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last') (input_)
-    x = Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, data_format='channels_last') (x)
-    x = BatchNormalization(momentum=0.5) (x)
-    x = Activation('elu') (x)
-    x = MaxPooling2D(pool_size=(1,3)) (x)
-    
-    x = Dropout(0.25)(x)
-    # Capa 2
-    x = Conv2D(filters=50, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-    x = BatchNormalization(momentum=0.5, epsilon=1e-5) (x)
-    x = Activation('elu') (x)
-    x = MaxPooling2D(pool_size=(1,3)) (x)
-    
-    x = Dropout(0.25) (x)
-    
-    # Capa 3
-    x = Conv2D(filters=100, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last') (x)
-    x = BatchNormalization(momentum=0.5, epsilon=1e-5) (x)
-    x = Activation('elu') (x)
-    x = MaxPooling2D(pool_size=(1,3)) (x)
-    
-    x = Dropout(0.25) (x)
-    
-    # Capa 4
-    x = Conv2D(filters=200, kernel_size=(1,2), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last') (x)
-    x = BatchNormalization(momentum=0.5) (x)
-    x = Activation('elu') (x)
-    encoded = MaxPooling2D(pool_size=1) (x)
-    
-    
-    
-    
-    x = UpSampling2D((1,3)) (encoded)
-    x = Activation('elu') (x)
-    x = BatchNormalization(momentum=0.5) (x)
-    x = Conv2D(filters=200, kernel_size=(1,2), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last') (x)
-
-    x = Dropout(0.25) (x)
-    
-    # Capa 3 inv
-    x = UpSampling2D((1,3)) (x)
-    x = Activation('elu') (x)
-    x = BatchNormalization(momentum=0.5, epsilon=1e-5) (x)
-    x = Conv2D(filters=100, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last') (x)
-
-    # Capa 2 inv
-    
-    
-    x = Dropout(0.25) (x)
-    
-    x = UpSampling2D((1,4)) (x)
-    x = Activation('elu') (x)
-    x = BatchNormalization(momentum=0.5, epsilon=1e-5) (x)
-    x = Conv2D(filters=50, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-    
-    
-    #Capa 1 inv
-    x = Dropout(0.25)(x)
-    x = UpSampling2D((30,3)) (x)
-    x = Activation('elu') (x)
-    x = BatchNormalization(momentum=0.5) (x)
-    x = Conv2D(filters=25, kernel_size=(1,5), activation='linear', strides=1,  data_format='channels_last') (x)
-    x = Conv2D(filters=1, kernel_size=(1,2), activation='linear', strides=1, data_format='channels_last') (x)
-
-
-    
-    
-
-#    x = Conv2D(filters=50, kernel_size=(1,9), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-#    x = UpSampling2D((30,4))(x)
-#    x = Conv2D(filters=1, kernel_size=(1,1), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-
-#    x = Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, data_format='channels_last') (x)
-#    x = UpSampling2D((30,1)) (x)
-#    x = Conv2D(filters=25, kernel_size=(1,1), activation='linear', strides=1,  data_format='channels_last') (x)
-
-#    model.add(Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
-#    model.add(Conv2D(filters=50, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last'))
-
-    encoder = Model(input_, x)
-    optimizer = SGD(lr=0.05)
-#    probar error cuadrático medio 
-    encoder.compile(optimizer, loss = 'binary_crossentropy')
-    
-    return encoder
-
-def create_autoencoder(n_channels = 30, n_samples = 256):
-    from keras.layers import Input, InputLayer,  Dense, Conv2D, MaxPooling2D, UpSampling2D
-    from keras.models import Model
-    from keras import backend as K
-    model = Sequential()
-    input_shape = (n_channels,n_samples,1)
-    #model.add(Dropout(0.5))
-    #model.add(Conv2D(filters=25, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last'))
-    
-    input_ = Input(input_shape)
-    x = Conv2D(filters=50, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last') (input_)
-    x = Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, data_format='channels_last') (x)
-    x = BatchNormalization(momentum=0.5) (x)
-    x = Activation('elu') (x)
-    x = MaxPooling2D(pool_size=(1,3)) (x)
-    
-    x = Dropout(0.25)(x)
-    
-    x = Conv2D(filters=50, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-    x = BatchNormalization(momentum=0.5, epsilon=1e-5) (x)
-    x = Activation('elu') (x)
-    #model.add(MaxPooling1D(pool_size=3))
-    encoded = MaxPooling2D(pool_size=(1,3)) (x)
-    
-    x = UpSampling2D((1,3)) (encoded)
-    x = Activation('elu') (x)
-    x = BatchNormalization(momentum=0.5, epsilon=1e-5) (x)
-    x = Conv2D(filters=50, kernel_size=(1,9), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-    x = UpSampling2D((30,4))(x)
-    x = Conv2D(filters=1, kernel_size=(1,1), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last')(x)
-
-#    x = Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, data_format='channels_last') (x)
-#    x = UpSampling2D((30,1)) (x)
-#    x = Conv2D(filters=25, kernel_size=(1,1), activation='linear', strides=1,  data_format='channels_last') (x)
-
-#    model.add(Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, input_shape=input_shape, data_format='channels_last'))
-#    model.add(Conv2D(filters=50, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last'))
-
-    encoder = Model(input_, x)
-    optimizer = SGD(lr=0.05)
-    encoder.compile(optimizer, loss = 'binary_crossentropy',metrics=['accuracy'])
-    
-    return encoder
-
-def create_autoencoder(n_channels = 30, n_samples = 256):
+def create_autoencoder_256(n_channels, compile_model=True):
+    """
+    Este método crea un modelo autoencoder pero únicamente funciona con sets que tengan
+    256 muestras, por eso no tiene estos argumentos
+    Parámetros:
+    ____
+    - compile_model: Entrega el modelo compilado con optimizador SGD con lr = 0.05
+    Retorna:
+    ____
+    - model: Modelo con las capas definidas y compilado si así se marcó
+    - str: Tipo de modelo generado, en este caso retorna 'autoencoder'
+    """
     from keras.layers import Input, Conv2D, Conv2DTranspose, MaxPooling2D, UpSampling2D
     from keras.models import Model
     
+    n_samples=256
     input_shape = (n_channels,n_samples,1)
-    #model.add(Dropout(0.5))
-    #model.add(Conv2D(filters=25, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last'))
-    
-    
+    print(input_shape)
     input_layer = Input(input_shape)
     # Capa 1
-    x = Conv2D(filters=50, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last') (input_layer)
-    x = Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, data_format='channels_last') (x)
+    x = Conv2D(filters=25, kernel_size=(1,10), activation='linear', strides=1, data_format='channels_last') (input_layer)
+    x = x = Conv2D(filters=50, kernel_size=(n_channels,1), activation='linear', strides=1,  data_format='channels_last') (x)
     x = BatchNormalization(momentum=0.5) (x)
     x = Activation('elu') (x)
     x = MaxPooling2D(pool_size=(1,3)) (x)
@@ -303,7 +169,8 @@ def create_autoencoder(n_channels = 30, n_samples = 256):
 
     autoencoder = Model(input_layer, decoded)
     autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
-    return autoencoder
+    return autoencoder, 'autoencoder'
     
 
-def create_and_fit_model(model_type, n_channels, n_samples, n_classes=2)
+model, _ = create_autoencoder_256()
+model.summary()
