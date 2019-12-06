@@ -1,5 +1,5 @@
 
-import utilities
+import deep_eeg_core
 import os.path as op
 
 """
@@ -37,12 +37,12 @@ sub_category = 'AlE'
 category = 'Emoticon' if 'E' in sub_category else 'Real'
 
 # Generación de la ruta a los sets clasificados (último paso del Matlab)
-path = op.join(utilities.CLASSIFIED_SETS_FOLDER, sets_package, category, sub_category)
+path = op.join(deep_eeg_core.CLASSIFIED_SETS_FOLDER, sets_package, category, sub_category)
     
-mne_files = utilities.get_files_with_mne(path)
+mne_files = deep_eeg_core.get_files_with_mne(path)
 
 
-files_wless_epochs, files_wless_samples, _ = utilities.check_files(mne_files, prev_time)
+files_wless_epochs, files_wless_samples, _ = deep_eeg_core.check_files(mne_files, prev_time)
 
 #%%
 
@@ -51,16 +51,15 @@ files_wless_epochs, files_wless_samples, _ = utilities.check_files(mne_files, pr
 # Sección para que sea más rápido
 # Este código saca un diccionario con todos los archivos de un 'sets_package'
 # =============================================================================
-# Que viva la pereza
 
 # En este diccionario estarán todos los archivos separados por sub categoría que no 
 # cumplen con el número de epochs y/o muestras
 all_files = {}
-for sub_cat in utilities.SUB_CATEGORIES:
+for sub_cat in deep_eeg_core.SUB_CATEGORIES:
     category = 'Emoticon' if 'E' in sub_cat else 'Real'
-    path = op.join(utilities.CLASSIFIED_SETS_FOLDER, sets_package, category, sub_cat)
-    mne_files = utilities.get_files_with_mne(path)
-    files_wless_epochs, files_wless_samples, ideal_samples_amount = utilities.check_files(mne_files, prev_time)
+    path = op.join(deep_eeg_core.CLASSIFIED_SETS_FOLDER, sets_package, category, sub_cat)
+    mne_files = deep_eeg_core.get_files_with_mne(path)
+    files_wless_epochs, files_wless_samples, ideal_samples_amount = deep_eeg_core.check_files(mne_files, prev_time)
     
     # Creción del diccionario que contendrá el 100% de la información
     consolidated_data = {
@@ -72,7 +71,12 @@ for sub_cat in utilities.SUB_CATEGORIES:
                 sub_cat: consolidated_data
             })
 
+#%% 
 
+# =============================================================================
+# Mostrar resultados del paso anterior
+# =============================================================================
+list(consolidated_data.items())
 
 
 
