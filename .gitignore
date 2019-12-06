@@ -1,0 +1,9 @@
+*.json
+*.h5
+/tests
+__*
+*.fif
+/__pycache__
+.DS_STORE
+__pycache__
+!__init__.py
