@@ -281,9 +281,17 @@ from keras.optimizers import SGD, Adam
 
 import models
 
-model = models.create_classifier_model(n_channels=n_channels, n_samples=n_samples)
+# Creación del modelo
+model, model_type = models.create_classifier_model(n_channels=n_channels, n_samples=n_samples)
+#model, model_type = models.create_autoencoder_256(n_channels=n_channels, n_samples=n_samples)
 
-#model = models.create_autoencoder1(n_channels = n_channels, n_samples = n_samples)
+# En caso que el modelo sea autoencoder tendrá que tratar de generar
+# a la salida la misma entrada, este modelo NO fue muy probado
+# y las únicas pruebas realizadas fueron con el set de 256 muestras, 
+# con los demás NO sirve
+if model_type == 'autoencoder':
+    Y_train = X_train
+    Y_test = X_test
 #%%
 
 model.fit(
